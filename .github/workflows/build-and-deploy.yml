@@ -110,12 +110,6 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'npm'
-
       - name: Check for package-lock.json
         id: check_lockfile
         run: |
@@ -127,21 +121,19 @@ jobs:
             echo "LOCK_FILE_EXISTS=false" >> $GITHUB_ENV
           fi
 
-      - name: Generate and Commit package-lock.json (if missing)
+      - name: Generate package-lock.json (if missing)
         if: env.LOCK_FILE_EXISTS == 'false'
         run: |
           echo "Generating package-lock.json..."
           npm install --package-lock-only
-          
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git add package-lock.json
-          git commit -m "Auto-generated package-lock.json"
-          git push origin main  # Change 'main' to your actual branch
+
+      - name: Setup Node.js (without cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
       - name: Install Dependencies
-        run: npm ci  # `ci` ensures dependencies match the lock file exactly
+        run: npm ci  # Uses package-lock.json
 
       - name: Run Unit Tests
         run: npm test
@@ -160,11 +152,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Extract Repository Name
-        run: |
-          REPO_NAME=${{ github.event.inputs.repo_url }}
-          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
-
       - name: Checkout Target Repo
         uses: actions/checkout@v4
         with:
@@ -187,4 +174,3 @@ jobs:
 
           curl -u${{ secrets.JFROG_USERNAME }}:${{ secrets.JFROG_PASSWORD }} \
                -T $FILE_PATH "${{ github.event.inputs.jfrog_url }}/$TARGET_PATH"
-
