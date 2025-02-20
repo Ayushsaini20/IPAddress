@@ -1,0 +1,12 @@
+{
+  "name": "ipaddress",
+  "version": "1.0.0",
+  "description": "This project is a simple application where users can input an IP address or domain, and the system will respond with DNS lookup or WHOIS details.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
