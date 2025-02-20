@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       repo_url:
-        description: 'GitHub Repository (owner/repo-name)'
+        description: 'GitHub Repository (format: owner/repo-name)'
         required: true
       jfrog_url:
         description: 'JFrog Artifactory URL'
@@ -14,10 +14,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Extract Repository Name
+        run: |
+          echo "Original repo_url: ${{ github.event.inputs.repo_url }}"
+          REPO_NAME=$(echo "${{ github.event.inputs.repo_url }}" | sed 's|github.com/||')
+          echo "Stripped repo_url: $REPO_NAME"
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+
       - name: Checkout Target Repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.inputs.repo_url }}
+          repository: ${{ env.REPO_NAME }}  # Uses the cleaned-up repository format
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node.js
@@ -46,13 +53,24 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Extract Repository Name
+        run: |
+          REPO_NAME=$(echo "${{ github.event.inputs.repo_url }}" | sed 's|github.com/||')
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+
+      - name: Checkout Target Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.REPO_NAME }}
+          token: ${{ secrets.GH_TOKEN }}
+
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: build-artifact
           path: dist/
 
-      - name: Upload Artifact to JFrog via CURL (Hardcoded)
+      - name: Upload Artifact to JFrog (Hardcoded Credentials)
         run: |
           echo "Uploading artifact to JFrog..."
           FILE_PATH="dist/*"
