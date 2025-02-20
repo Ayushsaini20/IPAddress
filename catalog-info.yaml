@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: test_repo
+  annotations:
+    github.com/project-slug: Ayushsaini20/IPAddress
+    github.com/actions: Ayushsaini20/IPAddress
+spec:
+  type: service
+  lifecycle: production
+  owner: your-team
