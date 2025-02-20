@@ -175,17 +175,20 @@ jobs:
           name: build-artifact
           path: dist/
           retention-days: 1
-
+# ---
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Extract Repository Name
+        run: |
+          REPO_NAME=$(echo "${{ github.event.inputs.repo_url }}" | sed 's|github.com/||')
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+
       - name: Checkout Target Repo
         uses: actions/checkout@v4
         with:
           repository: ${{ env.REPO_NAME }}
-          ref: main  # Change to your actual branch
-          fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Download Build Artifact
@@ -194,12 +197,40 @@ jobs:
           name: build-artifact
           path: dist/
 
-      - name: Upload Artifact to JFrog
+      - name: Upload Artifact to JFrog (Hardcoded Credentials)
         run: |
           echo "Uploading artifact to JFrog..."
           FILE_PATH="dist/*"
           TARGET_PATH="artifacts-generic-local/"
 
-          curl -u${{ secrets.JFROG_USERNAME }}:${{ secrets.JFROG_PASSWORD }} \
-               -T $FILE_PATH "${{ github.event.inputs.jfrog_url }}/$TARGET_PATH"
+          curl -uayush.sai2025@gmail.com:cmVmdGtuOjAxOjE3NzA5ODAzNzM6MU15Rld2alhvckdPTGR4UU85WDF4eWxwUjdm \
+               -T $FILE_PATH "https://ayushsaini12341.jfrog.io/artifactory/$TARGET_PATH"
+
+# ---
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout Target Repo
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: ${{ env.REPO_NAME }}
+  #         ref: main  # Change to your actual branch
+  #         fetch-depth: 0
+  #         token: ${{ secrets.GH_TOKEN }}
+
+  #     - name: Download Build Artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: build-artifact
+  #         path: dist/
+
+  #     - name: Upload Artifact to JFrog
+  #       run: |
+  #         echo "Uploading artifact to JFrog..."
+  #         FILE_PATH="dist/*"
+  #         TARGET_PATH="artifacts-generic-local/"
+
+  #         curl -u${{ secrets.JFROG_USERNAME }}:${{ secrets.JFROG_PASSWORD }} \
+  #              -T $FILE_PATH "${{ github.event.inputs.jfrog_url }}/$TARGET_PATH"
 
